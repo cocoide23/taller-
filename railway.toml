@@ -2,8 +2,7 @@
 # https://docs.railway.app/reference/config-as-code
 
 [build]
-builder      = "nixpacks"
-buildCommand = "npm run build:all"
+builder = "nixpacks"
 
 [deploy]
 startCommand = "node dist-server/index.js"
