@@ -126,8 +126,6 @@ export default function Presupuestos() {
       } else {
         await mockDbService.congelarPresupuesto(selectedOrder.id, finalDiagnostico, costoManoObra);
       }
-      setAiSuggestedItems([]);
-      setSelectedAiItems([]);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Service Unavailable: Ocurrió un error al procesar la transacción.");
