@@ -14,9 +14,30 @@ export interface Part {
 }
 
 export interface AuditEvent {
-  accion: 'Aprobado' | 'Desbloqueado';
+  accion: string;
   usuario: string;
   fecha: string;
+}
+
+export interface PresupuestoVersion {
+  version: number;
+  diagnostico: string;
+  costoManoObra: number;
+  totalRepuestos: number;
+  fecha: string;
+  aprobadoPor: string;
+  motivoCambio?: string;
+}
+
+export interface Vehicle {
+  patente: string;
+  modelo: string;
+  cliente: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+  };
+  fechaCreacion: string;
 }
 
 export interface Order {
@@ -36,6 +57,8 @@ export interface Order {
   repuestos: Part[];
   mecanicoResponsable: { id: string; nombre: string } | null;
   presupuestoAprobado: boolean;
+  versionPresupuesto?: number;
+  historialPresupuestos?: PresupuestoVersion[];
   evidenciaFotografica?: string[];
   auditLog?: {
     aprobadoPor: string;
@@ -54,10 +77,35 @@ export interface HistoryEntry {
   evidenciaFotografica?: string[];
 }
 
+export const normalizePatente = (patente: string) => {
+  return patente.toUpperCase().replace(/[\s-]/g, '');
+};
+
+let mockVehicles: Vehicle[] = [
+  {
+    patente: normalizePatente('ABC 123'),
+    modelo: 'Ford Focus',
+    cliente: { nombre: 'Juan', apellido: 'Pérez', telefono: '1123456789' },
+    fechaCreacion: new Date(Date.now() - 365 * 86400000).toISOString()
+  },
+  {
+    patente: normalizePatente('XYZ 789'),
+    modelo: 'Toyota Corolla',
+    cliente: { nombre: 'María', apellido: 'Gómez', telefono: '1198765432' },
+    fechaCreacion: new Date(Date.now() - 200 * 86400000).toISOString()
+  },
+  {
+    patente: normalizePatente('DEF 456'),
+    modelo: 'Volkswagen Golf',
+    cliente: { nombre: 'Lucas', apellido: 'Rodríguez', telefono: '1155554444' },
+    fechaCreacion: new Date(Date.now() - 100 * 86400000).toISOString()
+  }
+];
+
 let mockOrders: Order[] = [
   {
     id: 'ord_1',
-    patente: 'ABC 123',
+    patente: normalizePatente('ABC 123'),
     modelo: 'Ford Focus',
     cliente: { nombre: 'Juan', apellido: 'Pérez', telefono: '1123456789' },
     estado: 'Ingresado',
@@ -68,11 +116,13 @@ let mockOrders: Order[] = [
     repuestos: [],
     mecanicoResponsable: null,
     presupuestoAprobado: false,
+    versionPresupuesto: 1,
+    historialPresupuestos: [],
     evidenciaFotografica: ['https://picsum.photos/seed/brakes1/400/300']
   },
   {
     id: 'ord_2',
-    patente: 'XYZ 789',
+    patente: normalizePatente('XYZ 789'),
     modelo: 'Toyota Corolla',
     cliente: { nombre: 'María', apellido: 'Gómez', telefono: '1198765432' },
     estado: 'Presupuestado',
@@ -81,17 +131,19 @@ let mockOrders: Order[] = [
     diagnostico: 'Cambio de correa de distribución y tensores',
     costoManoObra: 85000,
     repuestos: [
-      { id: 'r1', nombre: 'Kit Correa Distribución', costo: 120000, cantidad: 1, ordenId: 'ord_2', patente: 'XYZ 789', mecanicoId: 'mec_1' },
-      { id: 'r2', nombre: 'Bomba de agua', costo: 45000, cantidad: 1, ordenId: 'ord_2', patente: 'XYZ 789', mecanicoId: 'mec_1' }
+      { id: 'r1', nombre: 'Kit Correa Distribución', costo: 120000, cantidad: 1, ordenId: 'ord_2', patente: normalizePatente('XYZ 789'), mecanicoId: 'mec_1' },
+      { id: 'r2', nombre: 'Bomba de agua', costo: 45000, cantidad: 1, ordenId: 'ord_2', patente: normalizePatente('XYZ 789'), mecanicoId: 'mec_1' }
     ],
     mecanicoResponsable: { id: 'mec_1', nombre: 'Carlos Gómez' },
     presupuestoAprobado: true,
+    versionPresupuesto: 1,
+    historialPresupuestos: [],
     evidenciaFotografica: ['https://picsum.photos/seed/engine1/400/300', 'https://picsum.photos/seed/belt1/400/300'],
     auditLog: { aprobadoPor: 'Admin', fechaAprobacion: new Date(Date.now() - 43200000).toISOString() }
   },
   {
     id: 'ord_3',
-    patente: 'DEF 456',
+    patente: normalizePatente('DEF 456'),
     modelo: 'Volkswagen Golf',
     cliente: { nombre: 'Lucas', apellido: 'Rodríguez', telefono: '1155554444' },
     estado: 'En Reparación',
@@ -100,18 +152,20 @@ let mockOrders: Order[] = [
     diagnostico: 'Junta de cárter rota',
     costoManoObra: 35000,
     repuestos: [
-      { id: 'r3', nombre: 'Junta de cárter', costo: 15000, cantidad: 1, ordenId: 'ord_3', patente: 'DEF 456', mecanicoId: 'mec_2' },
-      { id: 'r4', nombre: 'Aceite 10W40 4L', costo: 28000, cantidad: 1, ordenId: 'ord_3', patente: 'DEF 456', mecanicoId: 'mec_2' }
+      { id: 'r3', nombre: 'Junta de cárter', costo: 15000, cantidad: 1, ordenId: 'ord_3', patente: normalizePatente('DEF 456'), mecanicoId: 'mec_2' },
+      { id: 'r4', nombre: 'Aceite 10W40 4L', costo: 28000, cantidad: 1, ordenId: 'ord_3', patente: normalizePatente('DEF 456'), mecanicoId: 'mec_2' }
     ],
     mecanicoResponsable: { id: 'mec_2', nombre: 'Ana Martínez' },
     presupuestoAprobado: true,
+    versionPresupuesto: 1,
+    historialPresupuestos: [],
     evidenciaFotografica: ['https://picsum.photos/seed/oil1/400/300'],
     auditLog: { aprobadoPor: 'Admin', fechaAprobacion: new Date(Date.now() - 86400000).toISOString() }
   }
 ];
 
 let mockHistory: Record<string, HistoryEntry[]> = {
-  'ABC 123': [
+  [normalizePatente('ABC 123')]: [
     {
       id: 'h_1',
       fecha: new Date(Date.now() - 30 * 86400000).toISOString(),
@@ -135,7 +189,8 @@ let mockHistory: Record<string, HistoryEntry[]> = {
 type Listener = () => void;
 const listeners: Record<string, Listener[]> = {
   orders: [],
-  history: []
+  history: [],
+  vehicles: []
 };
 
 function notify(collection: string) {
@@ -172,8 +227,9 @@ export const mockDbService = {
         
         mockOrders = mockOrders.map(o => {
           if (o.id === ordenId) {
+            const version = o.versionPresupuesto || 1;
             const newEvent: AuditEvent = {
-              accion: 'Aprobado',
+              accion: `Aprobado (v${version})`,
               usuario: 'Usuario Actual (Admin)',
               fecha: new Date().toISOString()
             };
@@ -183,6 +239,7 @@ export const mockDbService = {
               costoManoObra,
               presupuestoAprobado: true,
               estado: 'Presupuestado',
+              versionPresupuesto: version,
               auditLog: {
                 aprobadoPor: newEvent.usuario,
                 fechaAprobacion: newEvent.fecha
@@ -195,6 +252,57 @@ export const mockDbService = {
         notify('orders');
         resolve();
       }, 1500); // Simulate network delay
+    });
+  },
+
+  generarNuevaVersionPresupuesto: async (ordenId: string, diagnostico: string, costoManoObra: number, motivo: string) => {
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        const order = mockOrders.find(o => o.id === ordenId);
+        if (!order) {
+          reject(new Error("La orden no existe."));
+          return;
+        }
+        
+        mockOrders = mockOrders.map(o => {
+          if (o.id === ordenId) {
+            const currentVersion: PresupuestoVersion = {
+              version: o.versionPresupuesto || 1,
+              diagnostico: o.diagnostico || '',
+              costoManoObra: o.costoManoObra || 0,
+              totalRepuestos: o.repuestos.reduce((acc, r) => acc + (r.costo * r.cantidad), 0),
+              fecha: o.auditLog?.fechaAprobacion || new Date().toISOString(),
+              aprobadoPor: o.auditLog?.aprobadoPor || 'Sistema',
+              motivoCambio: motivo
+            };
+
+            const newVersionNumber = (o.versionPresupuesto || 1) + 1;
+            const newEvent: AuditEvent = {
+              accion: `Nueva Versión (v${newVersionNumber}) generada. Motivo: ${motivo}`,
+              usuario: 'Usuario Actual (Admin)',
+              fecha: new Date().toISOString()
+            };
+
+            return {
+              ...o,
+              diagnostico,
+              costoManoObra,
+              presupuestoAprobado: true,
+              estado: 'Presupuestado',
+              versionPresupuesto: newVersionNumber,
+              historialPresupuestos: [...(o.historialPresupuestos || []), currentVersion],
+              auditLog: {
+                aprobadoPor: newEvent.usuario,
+                fechaAprobacion: newEvent.fecha
+              },
+              auditHistory: [...(o.auditHistory || []), newEvent]
+            };
+          }
+          return o;
+        });
+        notify('orders');
+        resolve();
+      }, 1500);
     });
   },
 
@@ -234,9 +342,10 @@ export const mockDbService = {
   },
 
   addOrder: (data: { patente: string, modelo: string, sintomaCliente: string, cliente: { nombre: string, apellido: string, telefono: string } }) => {
+    const normalizedPatente = normalizePatente(data.patente);
     const newOrder: Order = {
       id: 'ord_' + Math.random().toString(36).substr(2, 9),
-      patente: data.patente.toUpperCase(),
+      patente: normalizedPatente,
       modelo: data.modelo,
       cliente: data.cliente,
       estado: 'Ingresado',
@@ -250,17 +359,47 @@ export const mockDbService = {
     };
     mockOrders = [newOrder, ...mockOrders];
     notify('orders');
+    
+    // Auto-register vehicle if it doesn't exist
+    if (!mockVehicles.find(v => v.patente === normalizedPatente)) {
+      mockDbService.addVehicle({
+        patente: normalizedPatente,
+        modelo: data.modelo,
+        cliente: data.cliente
+      });
+    }
   },
 
-  subscribeToHistorial: (patente: string, callback: (history: HistoryEntry[]) => void) => {
+  checkVehicleExists: (patente: string) => {
+    return mockVehicles.some(v => v.patente === normalizePatente(patente));
+  },
+
+  addVehicle: (data: { patente: string, modelo: string, cliente: { nombre: string, apellido: string, telefono: string } }) => {
+    const normalizedPatente = normalizePatente(data.patente);
+    if (!mockVehicles.find(v => v.patente === normalizedPatente)) {
+      mockVehicles.push({
+        patente: normalizedPatente,
+        modelo: data.modelo,
+        cliente: data.cliente,
+        fechaCreacion: new Date().toISOString()
+      });
+      notify('vehicles');
+    }
+  },
+
+  subscribeToHistorial: (patente: string, callback: (orders: Order[]) => void) => {
+    const normalizedPatente = normalizePatente(patente);
     const listener = () => {
-      const history = mockHistory[patente.toUpperCase()] || [];
-      callback([...history]);
+      // Return orders matching the patente, sorted by date descending
+      const historyOrders = mockOrders
+        .filter(o => o.patente === normalizedPatente)
+        .sort((a, b) => new Date(b.fechaIngreso).getTime() - new Date(a.fechaIngreso).getTime());
+      callback([...historyOrders]);
     };
-    listeners.history.push(listener);
+    listeners.orders.push(listener); // Listen to orders changes
     listener(); // Initial call
     return () => {
-      listeners.history = listeners.history.filter(l => l !== listener);
+      listeners.orders = listeners.orders.filter(l => l !== listener);
     };
   },
 

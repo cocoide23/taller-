@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { mockDbService, Order } from '../services/mockDb';
-import { Calculator, Lock, CheckCircle2, AlertCircle, Loader2, Wand2, MessageCircle, FileText, Unlock, CheckSquare, Square } from 'lucide-react';
+import { Calculator, Lock, CheckCircle2, AlertCircle, Loader2, Wand2, MessageCircle, FileText, Unlock, CheckSquare, Square, History, AlertTriangle } from 'lucide-react';
 import { generateDiagnosis } from '../services/geminiDiagnostico';
 
 // Función de formateo financiero (ARS)
@@ -23,8 +23,12 @@ export default function Presupuestos() {
   // Estado local para manejar el input de costo con decimales en tiempo real
   const [costoManoObraInput, setCostoManoObraInput] = useState<string>('0');
   const [diagnosticoInput, setDiagnosticoInput] = useState<string>('');
-  const [aiSuggestedItems, setAiSuggestedItems] = useState<string[]>([]);
-  const [selectedAiItems, setSelectedAiItems] = useState<string[]>([]);
+  
+  // Nuevos estados para versionado y alerta preventiva
+  const [isCreatingNewVersion, setIsCreatingNewVersion] = useState(false);
+  const [motivoCambio, setMotivoCambio] = useState('');
+  const [alertaPreventiva, setAlertaPreventiva] = useState<string>('');
+  const [includePreventiveAlert, setIncludePreventiveAlert] = useState(false);
 
   useEffect(() => {
     const unsubscribe = mockDbService.subscribeToOrders(setOrders);
@@ -38,13 +42,17 @@ export default function Presupuestos() {
     if (selectedOrder) {
       setCostoManoObraInput(selectedOrder.costoManoObra ? selectedOrder.costoManoObra.toString() : '0');
       setDiagnosticoInput(selectedOrder.diagnostico || '');
-      setAiSuggestedItems([]);
-      setSelectedAiItems([]);
+      setIsCreatingNewVersion(false);
+      setMotivoCambio('');
+      setAlertaPreventiva('');
+      setIncludePreventiveAlert(false);
     } else {
       setCostoManoObraInput('0');
       setDiagnosticoInput('');
-      setAiSuggestedItems([]);
-      setSelectedAiItems([]);
+      setIsCreatingNewVersion(false);
+      setMotivoCambio('');
+      setAlertaPreventiva('');
+      setIncludePreventiveAlert(false);
     }
     setError(null);
   }, [selectedOrderId, selectedOrder?.id]);
@@ -65,9 +73,9 @@ export default function Presupuestos() {
     setError(null);
     try {
       const result = await generateDiagnosis(selectedOrder.sintomaCliente, selectedOrder.modelo);
-      setAiSuggestedItems(result.repuestosSugeridos);
-      setSelectedAiItems(result.repuestosSugeridos);
-      const newText = `[DIAGNÓSTICO IA]\n${result.diagnosticoPresuntivo}\n\n[ALERTA PREVENTIVA]\n${result.alertaMantenimiento}`;
+      setAlertaPreventiva(result.alertaMantenimiento);
+      setIncludePreventiveAlert(true);
+      const newText = `[DIAGNÓSTICO IA]\n${result.diagnosticoPresuntivo}`;
       setDiagnosticoInput(newText);
     } catch (err: any) {
       console.error(err);
@@ -77,42 +85,33 @@ export default function Presupuestos() {
     }
   };
 
-  const handleToggleAiItem = (item: string) => {
-    setSelectedAiItems(prev => 
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
-  };
-
   const handleSaveDraft = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedOrder) return;
 
     const costoManoObra = parseFloat(costoManoObraInput) || 0;
-    const finalDiagnostico = aiSuggestedItems.length > 0 
-      ? `${diagnosticoInput}\n\n[REPUESTOS SUGERIDOS SELECCIONADOS]\n- ${selectedAiItems.join('\n- ')}`
-      : diagnosticoInput;
+    const finalDiagnostico = diagnosticoInput;
 
     mockDbService.updateOrder(selectedOrder.id, {
       diagnostico: finalDiagnostico,
       costoManoObra,
       estado: 'Presupuestado'
     });
-    
-    // Limpiar sugerencias después de guardar
-    setAiSuggestedItems([]);
-    setSelectedAiItems([]);
   };
 
   const handleApprove = async () => {
     if (!selectedOrder) return;
     
     const costoManoObra = parseFloat(costoManoObraInput) || 0;
-    const finalDiagnostico = aiSuggestedItems.length > 0 
-      ? `${diagnosticoInput}\n\n[REPUESTOS SUGERIDOS SELECCIONADOS]\n- ${selectedAiItems.join('\n- ')}`
-      : diagnosticoInput;
+    const finalDiagnostico = diagnosticoInput;
     
     if (!finalDiagnostico.trim()) {
       setError("El diagnóstico es obligatorio para aprobar el presupuesto.");
+      return;
+    }
+    
+    if (isCreatingNewVersion && !motivoCambio.trim()) {
+      setError("Debe indicar el motivo del cambio para generar una nueva versión.");
       return;
     }
 
@@ -120,7 +119,13 @@ export default function Presupuestos() {
     setError(null);
 
     try {
-      await mockDbService.congelarPresupuesto(selectedOrder.id, finalDiagnostico, costoManoObra);
+      if (isCreatingNewVersion) {
+        await mockDbService.generarNuevaVersionPresupuesto(selectedOrder.id, finalDiagnostico, costoManoObra, motivoCambio);
+        setIsCreatingNewVersion(false);
+        setMotivoCambio('');
+      } else {
+        await mockDbService.congelarPresupuesto(selectedOrder.id, finalDiagnostico, costoManoObra);
+      }
       setAiSuggestedItems([]);
       setSelectedAiItems([]);
     } catch (err: any) {
@@ -131,16 +136,16 @@ export default function Presupuestos() {
     }
   };
 
-  const handleRequestUnlock = async () => {
-    if (!selectedOrder) return;
-    setIsSaving(true);
-    setError(null);
-    try {
-      await mockDbService.descongelarPresupuesto(selectedOrder.id, "Mecánico Autorizado");
-    } catch (err: any) {
-      setError(err.message || "Error al solicitar modificación.");
-    } finally {
-      setIsSaving(false);
+  const handleStartNewVersion = () => {
+    setIsCreatingNewVersion(true);
+  };
+
+  const handleCancelNewVersion = () => {
+    setIsCreatingNewVersion(false);
+    setMotivoCambio('');
+    if (selectedOrder) {
+      setCostoManoObraInput(selectedOrder.costoManoObra ? selectedOrder.costoManoObra.toString() : '0');
+      setDiagnosticoInput(selectedOrder.diagnostico || '');
     }
   };
 
@@ -151,8 +156,13 @@ export default function Presupuestos() {
     const vehiculo = `${selectedOrder.modelo} (${selectedOrder.patente})`;
     const totalARS = formatARS(totalGeneral);
     const linkApp = window.location.origin; // O un link específico
+    const versionStr = selectedOrder.versionPresupuesto ? ` V${selectedOrder.versionPresupuesto}` : '';
 
-    const mensaje = `Hola ${nombre}, el diagnóstico de tu ${vehiculo} ya está listo. El presupuesto total es de ${totalARS}. Podés ver el detalle técnico y las fotos de los repuestos aquí: ${linkApp}`;
+    let mensaje = `Hola ${nombre}, el presupuesto${versionStr} de tu ${vehiculo} está listo. Total: ${totalARS}. Podés revisarlo aquí: ${linkApp}`;
+    
+    if (includePreventiveAlert && alertaPreventiva) {
+      mensaje += `\n\n💡 Mantenimiento Sugerido: ${alertaPreventiva}`;
+    }
     
     const url = `https://wa.me/${telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
@@ -199,13 +209,13 @@ export default function Presupuestos() {
               </div>
             )}
 
-            {selectedOrder.presupuestoAprobado && (
+            {selectedOrder.presupuestoAprobado && !isCreatingNewVersion && (
               <div className="mb-8 space-y-4">
                 <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 text-emerald-800 animate-in fade-in">
                   <Lock className="w-5 h-5 mt-0.5 text-emerald-600 shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-emerald-900">Presupuesto Aprobado y Congelado</h4>
-                    <p className="text-sm text-emerald-700 mt-1">Los campos de precio y diagnóstico están bloqueados por reglas de inmutabilidad (Firestore Rules).</p>
+                    <h4 className="font-semibold text-emerald-900">Presupuesto Aprobado (v{selectedOrder.versionPresupuesto || 1})</h4>
+                    <p className="text-sm text-emerald-700 mt-1">Los campos de precio y diagnóstico están bloqueados. Puedes generar una nueva versión si necesitas hacer cambios.</p>
                   </div>
                 </div>
                 
@@ -227,10 +237,28 @@ export default function Presupuestos() {
             )}
 
             <form onSubmit={handleSaveDraft} className="space-y-8">
+              {isCreatingNewVersion && (
+                <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl animate-in fade-in mb-6">
+                  <h4 className="font-semibold text-amber-900 flex items-center gap-2 mb-3">
+                    <History className="w-5 h-5 text-amber-600" />
+                    Generando Nueva Versión (v{(selectedOrder.versionPresupuesto || 1) + 1})
+                  </h4>
+                  <label className="block text-sm font-medium text-amber-800 mb-2">Motivo del Cambio *</label>
+                  <input
+                    type="text"
+                    value={motivoCambio}
+                    onChange={(e) => setMotivoCambio(e.target.value)}
+                    className="w-full p-3 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
+                    placeholder="Ej: Se agregó repuesto faltante, ajuste de mano de obra..."
+                    required={isCreatingNewVersion}
+                  />
+                </div>
+              )}
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-slate-700">Diagnóstico Técnico</label>
-                  {!selectedOrder.presupuestoAprobado && (
+                  {(!selectedOrder.presupuestoAprobado || isCreatingNewVersion) && (
                     <button
                       type="button"
                       onClick={handleMagicWand}
@@ -245,44 +273,32 @@ export default function Presupuestos() {
                 <textarea
                   value={diagnosticoInput}
                   onChange={(e) => setDiagnosticoInput(e.target.value)}
-                  disabled={selectedOrder.presupuestoAprobado || isSaving || isAnalyzing}
+                  disabled={(selectedOrder.presupuestoAprobado && !isCreatingNewVersion) || isSaving || isAnalyzing}
                   className="w-full h-40 p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-60 disabled:bg-slate-100 resize-none shadow-inner transition-all text-slate-700"
                   placeholder="Detalle el problema encontrado y los trabajos a realizar..."
                   required
                 />
                 
-                {aiSuggestedItems.length > 0 && !selectedOrder.presupuestoAprobado && (
-                  <div className="mt-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl animate-in fade-in">
-                    <h4 className="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
-                      <Wand2 className="w-4 h-4 text-indigo-500" />
-                      Repuestos Sugeridos por IA (Selecciona para incluir)
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {aiSuggestedItems.map((item, idx) => {
-                        const isSelected = selectedAiItems.includes(item);
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => handleToggleAiItem(item)}
-                            className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                              isSelected 
-                                ? 'bg-white border-indigo-300 shadow-sm' 
-                                : 'bg-white/50 border-slate-200 opacity-70 hover:opacity-100'
-                            }`}
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="w-5 h-5 text-indigo-600 shrink-0" />
-                            ) : (
-                              <Square className="w-5 h-5 text-slate-400 shrink-0" />
-                            )}
-                            <span className={`text-sm ${isSelected ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>
-                              {item}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                {alertaPreventiva && (!selectedOrder.presupuestoAprobado || isCreatingNewVersion) && (
+                  <div className="mt-4 p-4 bg-amber-50/50 border border-amber-100 rounded-xl animate-in fade-in">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <div className="mt-0.5">
+                        <input 
+                          type="checkbox" 
+                          checked={includePreventiveAlert}
+                          onChange={(e) => setIncludePreventiveAlert(e.target.checked)}
+                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                          Mantenimiento Sugerido (IA)
+                        </h4>
+                        <p className="text-sm text-amber-700 mt-1">{alertaPreventiva}</p>
+                        <p className="text-xs text-amber-600/70 mt-1 italic">Si marcas esta opción, se incluirá como nota en el mensaje de WhatsApp al cliente.</p>
+                      </div>
+                    </label>
                   </div>
                 )}
               </div>
@@ -295,7 +311,7 @@ export default function Presupuestos() {
                       type="text"
                       value={formatARS(parseFloat(costoManoObraInput) || 0)}
                       onChange={handleCostoChange}
-                      disabled={selectedOrder.presupuestoAprobado || isSaving}
+                      disabled={(selectedOrder.presupuestoAprobado && !isCreatingNewVersion) || isSaving}
                       className="w-full p-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-60 disabled:bg-slate-100 shadow-sm transition-all text-slate-900 font-medium"
                       placeholder="$ 0,00"
                       required
@@ -324,16 +340,16 @@ export default function Presupuestos() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                  {selectedOrder.presupuestoAprobado ? (
+                  {selectedOrder.presupuestoAprobado && !isCreatingNewVersion ? (
                     <>
                       <button
                         type="button"
-                        onClick={handleRequestUnlock}
+                        onClick={handleStartNewVersion}
                         disabled={isSaving}
                         className="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg w-full sm:w-auto disabled:opacity-70"
                       >
-                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Unlock className="w-5 h-5" />}
-                        Solicitar Modificación
+                        <History className="w-5 h-5" />
+                        Modificar Presupuesto
                       </button>
                       <button
                         type="button"
@@ -346,13 +362,25 @@ export default function Presupuestos() {
                     </>
                   ) : (
                     <>
-                      <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto"
-                      >
-                        Guardar Borrador
-                      </button>
+                      {isCreatingNewVersion && (
+                        <button
+                          type="button"
+                          onClick={handleCancelNewVersion}
+                          disabled={isSaving}
+                          className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                      {!isCreatingNewVersion && (
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                        >
+                          Guardar Borrador
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={handleApprove}
@@ -362,12 +390,12 @@ export default function Presupuestos() {
                         {isSaving ? (
                           <>
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            Procesando Transacción...
+                            Procesando...
                           </>
                         ) : (
                           <>
                             <CheckCircle2 className="w-5 h-5" />
-                            Aprobar y Congelar
+                            {isCreatingNewVersion ? 'Generar Nueva Versión' : 'Aprobar y Congelar'}
                           </>
                         )}
                       </button>

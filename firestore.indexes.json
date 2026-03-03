@@ -15,11 +15,15 @@
       ]
     },
     {
-      "collectionGroup": "historial_tecnico",
+      "collectionGroup": "vehiculos",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "fecha",
+          "fieldPath": "patente",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fechaCreacion",
           "order": "DESCENDING"
         }
       ]

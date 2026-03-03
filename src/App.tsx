@@ -208,7 +208,7 @@ export default function App() {
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'presupuestos' && <Presupuestos />}
           {activeTab === 'trazabilidad' && <Trazabilidad />}
-          {activeTab === 'repuestos' && <Repuestos />}
+          {activeTab === 'repuestos' && <Repuestos aiResult={aiResult} />}
           {activeTab === 'evidencias' && <Evidencias />}
           {activeTab === 'devops' && <FirebaseSetup />}
           {activeTab === 'finanzas' && <Finanzas />}
@@ -266,8 +266,8 @@ export default function App() {
                 {/* Output Section */}
                 <div className="bg-slate-900 rounded-xl p-6 flex flex-col h-full min-h-[300px] shadow-sm">
                   <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
-                    <Code2 className="w-4 h-4" />
-                    JSON Estructurado (Output)
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    Datos Extraídos (Estructurados)
                   </h3>
                   
                   {isProcessing ? (
@@ -318,13 +318,6 @@ export default function App() {
                           </div>
                         </div>
                       )}
-
-                      {/* Raw JSON */}
-                      <div className="mt-auto pt-4 border-t border-slate-800">
-                        <pre className="text-slate-300 font-mono text-xs overflow-x-auto">
-                          {JSON.stringify(aiResult, null, 2)}
-                        </pre>
-                      </div>
                     </div>
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-slate-600 text-sm text-center">

@@ -2,7 +2,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 export interface DiagnosisResult {
   diagnosticoPresuntivo: string;
-  repuestosSugeridos: string[];
   alertaMantenimiento: string;
 }
 
@@ -14,9 +13,8 @@ export const generateDiagnosis = async (sintoma: string, modelo: string): Promis
   El cliente reporta el siguiente síntoma en su vehículo (${modelo}): "${sintoma}".
   
   Tu tarea es generar:
-  1. Un diagnóstico presuntivo profesional y técnico.
-  2. Una lista de repuestos sugeridos que podrían necesitarse. IMPORTANTE: NO incluyas precios bajo ninguna circunstancia.
-  3. Una alerta de mantenimiento preventivo recomendada para este tipo de vehículo o síntoma.`;
+  1. Un diagnóstico presuntivo redactado de forma profesional, empática y clara para el cliente (un párrafo bien redactado, no una lista de datos técnicos).
+  2. Una alerta de mantenimiento preventivo recomendada para este tipo de vehículo o síntoma (ej: "Sugerimos revisar también...").`;
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -30,17 +28,12 @@ export const generateDiagnosis = async (sintoma: string, modelo: string): Promis
             type: Type.STRING, 
             description: "Diagnóstico técnico detallado del problema." 
           },
-          repuestosSugeridos: { 
-            type: Type.ARRAY, 
-            items: { type: Type.STRING }, 
-            description: "Lista de repuestos sugeridos. SIN PRECIOS." 
-          },
           alertaMantenimiento: { 
             type: Type.STRING, 
             description: "Alerta de mantenimiento preventivo a recomendar al cliente." 
           }
         },
-        required: ["diagnosticoPresuntivo", "repuestosSugeridos", "alertaMantenimiento"]
+        required: ["diagnosticoPresuntivo", "alertaMantenimiento"]
       }
     }
   });

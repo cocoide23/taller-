@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mockDbService, Order } from '../services/mockDb';
-import { Wrench, Plus, Package } from 'lucide-react';
+import { Wrench, Plus, Package, Bot, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { MechanicReport } from '../services/geminiService';
 
 // Función de formateo financiero (ARS)
 const formatARS = (value: number) => {
@@ -18,11 +19,13 @@ const mecanicos = [
   { id: 'mec_3', nombre: 'Juan Pérez' },
 ];
 
-export default function Repuestos() {
+export default function Repuestos({ aiResult }: { aiResult?: MechanicReport | null }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const [selectedMecanicoId, setSelectedMecanicoId] = useState<string>('');
   const [costoInput, setCostoInput] = useState<string>('0');
+  const [nombreRepuesto, setNombreRepuesto] = useState<string>('');
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = mockDbService.subscribeToOrders(setOrders);
@@ -46,15 +49,18 @@ export default function Repuestos() {
     if (!selectedOrder || !selectedMecanicoId) return;
 
     const formData = new FormData(e.currentTarget);
-    const nombre = formData.get('nombre') as string;
     const costo = parseFloat(costoInput) || 0;
     const cantidad = Number(formData.get('cantidad'));
 
     const mecanico = mecanicos.find(m => m.id === selectedMecanicoId)!;
 
-    mockDbService.addRepuestoToOrden(selectedOrder.id, { nombre, costo, cantidad }, mecanico);
-    e.currentTarget.reset();
+    mockDbService.addRepuestoToOrden(selectedOrder.id, { nombre: nombreRepuesto, costo, cantidad }, mecanico);
+    setNombreRepuesto('');
     setCostoInput('0');
+  };
+
+  const handleSelectAiItem = (item: string) => {
+    setNombreRepuesto(item);
   };
 
   return (
@@ -104,6 +110,43 @@ export default function Repuestos() {
             </div>
           </div>
 
+          {/* Asistente de Selección IA */}
+          {aiResult && aiResult.repuestosDetectados.length > 0 && (
+            <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 shadow-sm transition-all">
+              <button 
+                onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="font-semibold text-indigo-900 flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-indigo-500" />
+                  Repuestos Sugeridos por IA
+                </h3>
+                {isAiPanelOpen ? <ChevronUp className="w-5 h-5 text-indigo-400" /> : <ChevronDown className="w-5 h-5 text-indigo-400" />}
+              </button>
+              
+              {isAiPanelOpen && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs text-indigo-700/70 mb-3">
+                    Selecciona un repuesto detectado para autopoblar el formulario.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {aiResult.repuestosDetectados.map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectAiItem(item)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium transition-all shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleAddRepuesto} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <h3 className="font-semibold text-slate-900 mb-4">Añadir Repuesto</h3>
             
@@ -112,10 +155,11 @@ export default function Repuestos() {
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Nombre / Marca</label>
                 <input 
                   type="text" 
-                  name="nombre"
+                  value={nombreRepuesto}
+                  onChange={(e) => setNombreRepuesto(e.target.value)}
                   required
                   disabled={!selectedOrderId || !selectedMecanicoId}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50 transition-all"
                   placeholder="Ej: Pastillas freno Bosch"
                 />
               </div>
