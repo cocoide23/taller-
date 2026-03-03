@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { mockDbService, HistoryEntry } from '../services/mockDb';
-import { Search, History, Wrench, Calendar } from 'lucide-react';
+import { Search, History, Wrench, Calendar, Camera } from 'lucide-react';
 
 export default function Trazabilidad() {
   const [patente, setPatente] = useState('');
@@ -40,7 +40,7 @@ export default function Trazabilidad() {
           type="text"
           value={patente}
           onChange={(e) => setPatente(e.target.value)}
-          className="block w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-mono uppercase focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+          className="block w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-lg font-mono uppercase focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-shadow"
           placeholder="INGRESE PATENTE (EJ: ABC 123)"
         />
       </div>
@@ -61,20 +61,43 @@ export default function Trazabilidad() {
               </div>
               
               {/* Card */}
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
+              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 uppercase tracking-wider">
                     <Calendar className="w-3.5 h-3.5" />
                     {new Date(entry.fecha).toLocaleDateString()}
                   </div>
-                  <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                  <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-lg border border-slate-200">
                     {entry.kilometraje.toLocaleString()} km
                   </span>
                 </div>
-                <p className="text-slate-700 mb-3">{entry.descripcion}</p>
+                
+                <p className="text-slate-700 mb-4 text-sm leading-relaxed">{entry.descripcion}</p>
+                
+                {/* Evidencia Fotográfica */}
+                {entry.evidenciaFotografica && entry.evidenciaFotografica.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-2">
+                      <Camera className="w-3.5 h-3.5" />
+                      Evidencia Fotográfica
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+                      {entry.evidenciaFotografica.map((url, i) => (
+                        <img 
+                          key={i} 
+                          src={url} 
+                          alt={`Evidencia ${i + 1}`} 
+                          className="w-24 h-24 object-cover rounded-xl border border-slate-200 shrink-0 snap-start"
+                          referrerPolicy="no-referrer"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
-                  <span>Mecánico: {entry.mecanicoResponsable}</span>
-                  <span className="font-mono opacity-50">ID: {entry.ordenId}</span>
+                  <span className="font-medium">Mecánico: {entry.mecanicoResponsable}</span>
+                  <span className="font-mono opacity-60">ID: {entry.ordenId}</span>
                 </div>
               </div>
             </div>

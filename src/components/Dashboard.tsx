@@ -32,6 +32,11 @@ export default function Dashboard() {
       patente: formData.get('patente') as string,
       modelo: formData.get('modelo') as string,
       sintomaCliente: formData.get('sintoma') as string,
+      cliente: {
+        nombre: formData.get('nombre') as string,
+        apellido: formData.get('apellido') as string,
+        telefono: formData.get('telefono') as string,
+      }
     });
     setShowAddForm(false);
   };
@@ -70,6 +75,38 @@ export default function Dashboard() {
           </h3>
           <form onSubmit={handleAddOrder} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Nombre Cliente</label>
+              <input 
+                type="text" 
+                name="nombre"
+                required
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="Ej: Juan"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Apellido Cliente</label>
+              <input 
+                type="text" 
+                name="apellido"
+                required
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="Ej: Pérez"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Teléfono (WhatsApp)</label>
+              <input 
+                type="tel" 
+                name="telefono"
+                required
+                pattern="^\+[1-9]\d{1,14}$"
+                title="Debe incluir el código de país, ej: +5491123456789"
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="Ej: +5491123456789"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Patente</label>
               <input 
                 type="text" 
@@ -79,7 +116,7 @@ export default function Dashboard() {
                 placeholder="Ej: ABC 123"
               />
             </div>
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Modelo de Auto</label>
               <input 
                 type="text" 

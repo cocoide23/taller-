@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { mockDbService, Order } from '../services/mockDb';
 import { Wrench, Plus, Package } from 'lucide-react';
 
+// Función de formateo financiero (ARS)
+const formatARS = (value: number) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
+
 const mecanicos = [
   { id: 'mec_1', nombre: 'Carlos Gómez' },
   { id: 'mec_2', nombre: 'Ana Martínez' },
@@ -12,6 +22,7 @@ export default function Repuestos() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const [selectedMecanicoId, setSelectedMecanicoId] = useState<string>('');
+  const [costoInput, setCostoInput] = useState<string>('0');
 
   useEffect(() => {
     const unsubscribe = mockDbService.subscribeToOrders(setOrders);
@@ -20,19 +31,30 @@ export default function Repuestos() {
 
   const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
+  const handleCostoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setCostoInput('0');
+      return;
+    }
+    const numericValue = parseInt(rawValue, 10) / 100;
+    setCostoInput(numericValue.toString());
+  };
+
   const handleAddRepuesto = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedOrder || !selectedMecanicoId) return;
 
     const formData = new FormData(e.currentTarget);
     const nombre = formData.get('nombre') as string;
-    const costo = Number(formData.get('costo'));
+    const costo = parseFloat(costoInput) || 0;
     const cantidad = Number(formData.get('cantidad'));
 
     const mecanico = mecanicos.find(m => m.id === selectedMecanicoId)!;
 
     mockDbService.addRepuestoToOrden(selectedOrder.id, { nombre, costo, cantidad }, mecanico);
     e.currentTarget.reset();
+    setCostoInput('0');
   };
 
   return (
@@ -102,13 +124,13 @@ export default function Repuestos() {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Costo ($)</label>
                   <input 
-                    type="number" 
-                    name="costo"
-                    required
-                    min="0"
+                    type="text" 
+                    value={formatARS(parseFloat(costoInput) || 0)}
+                    onChange={handleCostoChange}
                     disabled={!selectedOrderId || !selectedMecanicoId}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
-                    placeholder="0.00"
+                    className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
+                    placeholder="$ 0,00"
+                    required
                   />
                 </div>
                 <div>
@@ -163,10 +185,10 @@ export default function Repuestos() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium text-slate-900">{r.nombre}</p>
-                          <p className="text-xs text-slate-500">Cant: {r.cantidad} x ${r.costo.toLocaleString()}</p>
+                          <p className="text-xs text-slate-500">Cant: {r.cantidad} x {formatARS(r.costo)}</p>
                         </div>
                         <div className="font-mono font-medium text-slate-700">
-                          ${(r.costo * r.cantidad).toLocaleString()}
+                          {formatARS(r.costo * r.cantidad)}
                         </div>
                       </div>
                       <div className="flex gap-2 mt-2 pt-2 border-t border-slate-200/60 text-[10px] uppercase tracking-wider text-slate-400 font-mono">
@@ -180,7 +202,7 @@ export default function Repuestos() {
                   <div className="mt-6 pt-4 border-t border-slate-200 flex justify-between items-center">
                     <span className="font-medium text-slate-600">Total Repuestos:</span>
                     <span className="text-xl font-bold text-indigo-600">
-                      ${selectedOrder.repuestos.reduce((acc, r) => acc + (r.costo * r.cantidad), 0).toLocaleString()}
+                      {formatARS(selectedOrder.repuestos.reduce((acc, r) => acc + (r.costo * r.cantidad), 0))}
                     </span>
                   </div>
                 </div>

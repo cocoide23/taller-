@@ -9,7 +9,8 @@ import {
   updateDoc, 
   doc, 
   addDoc, 
-  orderBy 
+  orderBy,
+  runTransaction
 } from 'firebase/firestore';
 
 // Configuración de Firebase (se obtendría de variables de entorno)
@@ -46,6 +47,42 @@ export const firestoreService = {
     if (!db) return;
     const ordenRef = doc(db, 'ordenes', ordenId);
     await updateDoc(ordenRef, data);
+  },
+
+  // 2.1 Presupuestos Pro: Congelar presupuesto usando transacción atómica
+  congelarPresupuesto: async (ordenId: string, diagnostico: string, costoManoObra: number) => {
+    if (!db) {
+      throw new Error("Service Unavailable: Firestore no está inicializado.");
+    }
+    
+    const ordenRef = doc(db, 'ordenes', ordenId);
+    
+    try {
+      await runTransaction(db, async (transaction) => {
+        const ordenDoc = await transaction.get(ordenRef);
+        if (!ordenDoc.exists()) {
+          throw new Error("La orden no existe.");
+        }
+        
+        const data = ordenDoc.data();
+        if (data.estado === 'Cerrado' || data.presupuestoAprobado) {
+          throw new Error("La orden ya está cerrada o el presupuesto ya fue aprobado.");
+        }
+
+        transaction.update(ordenRef, {
+          diagnostico,
+          costoManoObra,
+          presupuestoAprobado: true,
+          estado: 'Presupuestado'
+        });
+      });
+    } catch (error: any) {
+      console.error("Error en la transacción de presupuesto:", error);
+      if (error.code === 'unavailable') {
+        throw new Error("Service Unavailable: No se pudo contactar con Firestore. Verifique su conexión.");
+      }
+      throw error;
+    }
   },
 
   // 3. Trazabilidad: onSnapshot para historial por patente

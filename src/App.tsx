@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard, ShieldCheck } from 'lucide-react';
+import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard, ShieldCheck, Menu, X, Camera } from 'lucide-react';
 import { processMechanicInput, MechanicReport } from './services/geminiService';
 import Dashboard from './components/Dashboard';
 import Presupuestos from './components/Presupuestos';
 import Trazabilidad from './components/Trazabilidad';
 import Repuestos from './components/Repuestos';
 import DevOps from './components/DevOps';
+import FirebaseSetup from './components/FirebaseSetup';
 import Finanzas from './components/Finanzas';
 import SecurityRules from './components/SecurityRules';
 import QAReport from './components/QAReport';
+import Evidencias from './components/Evidencias';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'ai' | 'devops' | 'finanzas' | 'security' | 'qa'>('qa');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'evidencias' | 'ai' | 'devops' | 'finanzas' | 'security' | 'qa'>('qa');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // AI State
   const [mechanicInput, setMechanicInput] = useState("Le cambié las pastillas de freno al Ford Focus patente ABC 123, me llevó 2 horas y usé repuestos marca Bosch");
@@ -36,20 +39,47 @@ export default function App() {
     }
   };
 
+  const handleTabChange = (tab: any) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col md:flex-row">
+    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 font-sans flex flex-col md:flex-row overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between z-20 sticky top-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+            <Wrench className="w-5 h-5" />
+          </div>
+          <h1 className="text-lg font-bold tracking-tight">Taller Manager</h1>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 bg-slate-800 rounded-lg text-slate-300 hover:text-white"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
       {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 md:min-h-screen p-4 flex flex-col gap-2">
-        <div className="flex items-center gap-3 mb-8 px-2 pt-4">
+      <aside className={`
+        fixed md:static inset-0 z-10 bg-slate-900 text-slate-300 
+        w-full md:w-64 flex-shrink-0 flex flex-col gap-2
+        transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        pt-20 md:pt-4 p-4 md:min-h-[100dvh] overflow-y-auto
+      `}>
+        <div className="hidden md:flex items-center gap-3 mb-8 px-2 pt-4">
           <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
             <Wrench className="w-5 h-5" />
           </div>
           <h1 className="text-xl font-bold text-white tracking-tight">Taller Manager</h1>
         </div>
 
-        <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto pb-4 md:pb-0">
+        <nav className="flex flex-col gap-1 pb-24 md:pb-0">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleTabChange('dashboard')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'dashboard' 
                 ? 'bg-indigo-500 text-white shadow-md' 
@@ -61,7 +91,7 @@ export default function App() {
           </button>
           
           <button
-            onClick={() => setActiveTab('presupuestos')}
+            onClick={() => handleTabChange('presupuestos')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'presupuestos' 
                 ? 'bg-indigo-500 text-white shadow-md' 
@@ -73,7 +103,7 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('repuestos')}
+            onClick={() => handleTabChange('repuestos')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'repuestos' 
                 ? 'bg-indigo-500 text-white shadow-md' 
@@ -85,7 +115,19 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('trazabilidad')}
+            onClick={() => handleTabChange('evidencias')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === 'evidencias' 
+                ? 'bg-indigo-500 text-white shadow-md' 
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Camera className="w-5 h-5" />
+            Evidencias
+          </button>
+
+          <button
+            onClick={() => handleTabChange('trazabilidad')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'trazabilidad' 
                 ? 'bg-indigo-500 text-white shadow-md' 
@@ -96,9 +138,9 @@ export default function App() {
             Trazabilidad
           </button>
 
-          <div className="md:mt-8 pt-4 md:border-t border-slate-800 space-y-1">
+          <div className="mt-8 pt-4 border-t border-slate-800 space-y-1">
             <button
-              onClick={() => setActiveTab('qa')}
+              onClick={() => handleTabChange('qa')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'qa' 
                   ? 'bg-emerald-500 text-white shadow-md' 
@@ -110,7 +152,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('finanzas')}
+              onClick={() => handleTabChange('finanzas')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'finanzas' 
                   ? 'bg-amber-500 text-white shadow-md' 
@@ -122,7 +164,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('security')}
+              onClick={() => handleTabChange('security')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'security' 
                   ? 'bg-rose-500 text-white shadow-md' 
@@ -134,7 +176,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('ai')}
+              onClick={() => handleTabChange('ai')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'ai' 
                   ? 'bg-emerald-500 text-white shadow-md' 
@@ -146,7 +188,7 @@ export default function App() {
             </button>
             
             <button
-              onClick={() => setActiveTab('devops')}
+              onClick={() => handleTabChange('devops')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'devops' 
                   ? 'bg-blue-600 text-white shadow-md' 
@@ -154,20 +196,21 @@ export default function App() {
               }`}
             >
               <Server className="w-5 h-5" />
-              CI/CD & DevOps
+              Deploy & Firebase
             </button>
           </div>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto h-[calc(100dvh-72px)] md:h-[100dvh] pb-safe">
         <div className="max-w-6xl mx-auto">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'presupuestos' && <Presupuestos />}
           {activeTab === 'trazabilidad' && <Trazabilidad />}
           {activeTab === 'repuestos' && <Repuestos />}
-          {activeTab === 'devops' && <DevOps />}
+          {activeTab === 'evidencias' && <Evidencias />}
+          {activeTab === 'devops' && <FirebaseSetup />}
           {activeTab === 'finanzas' && <Finanzas />}
           {activeTab === 'security' && <SecurityRules />}
           {activeTab === 'qa' && <QAReport />}
