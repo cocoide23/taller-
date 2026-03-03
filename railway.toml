@@ -1,0 +1,11 @@
+﻿# Railway deployment configuration
+# https://docs.railway.app/reference/config-as-code
+
+[build]
+builder      = "nixpacks"
+buildCommand = "npm run build:all"
+
+[deploy]
+startCommand = "node dist-server/index.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

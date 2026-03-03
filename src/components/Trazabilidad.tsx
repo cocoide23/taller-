@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mockDbService, Order, normalizePatente } from '../services/mockDb';
+import { mockDbService, Order, normalizePatente } from '../services/apiService';
 import { Search, History, Wrench, Calendar, Camera, PlusCircle, Car, User, CheckCircle2, Package } from 'lucide-react';
 
 export default function Trazabilidad() {
@@ -18,18 +18,28 @@ export default function Trazabilidad() {
     }
 
     const normalizedPatente = normalizePatente(patente);
-    setVehicleExists(mockDbService.checkVehicleExists(normalizedPatente));
+    let active = true;
 
-    // Simula onSnapshot a la subcolección historial_tecnico
-    const unsubscribe = mockDbService.subscribeToHistorial(normalizedPatente, (data) => {
-      setHistory(data);
-      setHasSearched(true);
+    // Check vehicle existence asynchronously
+    mockDbService.checkVehicleExists(normalizedPatente).then(exists => {
+      if (active) setVehicleExists(exists);
     });
 
-    return () => unsubscribe();
+    // Subscribe to order history for this license plate
+    const unsubscribe = mockDbService.subscribeToHistorial(normalizedPatente, (data) => {
+      if (active) {
+        setHistory(data);
+        setHasSearched(true);
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [patente]);
 
-  const handleRegisterVehicle = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegisterVehicle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const modelo = formData.get('modelo') as string;
@@ -37,7 +47,7 @@ export default function Trazabilidad() {
     const apellido = formData.get('apellido') as string;
     const telefono = formData.get('telefono') as string;
 
-    mockDbService.addVehicle({
+    await mockDbService.addVehicle({
       patente: normalizePatente(patente),
       modelo,
       cliente: { nombre, apellido, telefono }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { mockDbService, Order } from '../services/mockDb';
+import { mockDbService, Order } from '../services/apiService';
 import { Calculator, Lock, CheckCircle2, AlertCircle, Loader2, Wand2, MessageCircle, FileText, Unlock, CheckSquare, Square, History, AlertTriangle } from 'lucide-react';
 import { generateDiagnosis } from '../services/geminiDiagnostico';
 
