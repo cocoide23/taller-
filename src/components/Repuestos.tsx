@@ -159,13 +159,20 @@ export default function Repuestos() {
               ) : (
                 <div className="space-y-3">
                   {selectedOrder.repuestos.map(r => (
-                    <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div>
-                        <p className="font-medium text-slate-900">{r.nombre}</p>
-                        <p className="text-xs text-slate-500">Cant: {r.cantidad} x ${r.costo.toLocaleString()}</p>
+                    <div key={r.id} className="flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-100 gap-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-slate-900">{r.nombre}</p>
+                          <p className="text-xs text-slate-500">Cant: {r.cantidad} x ${r.costo.toLocaleString()}</p>
+                        </div>
+                        <div className="font-mono font-medium text-slate-700">
+                          ${(r.costo * r.cantidad).toLocaleString()}
+                        </div>
                       </div>
-                      <div className="font-mono font-medium text-slate-700">
-                        ${(r.costo * r.cantidad).toLocaleString()}
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-slate-200/60 text-[10px] uppercase tracking-wider text-slate-400 font-mono">
+                        <span className="bg-slate-200/50 px-2 py-0.5 rounded">ORD: {r.ordenId}</span>
+                        <span className="bg-slate-200/50 px-2 py-0.5 rounded">PAT: {r.patente}</span>
+                        <span className="bg-slate-200/50 px-2 py-0.5 rounded">MEC: {r.mecanicoId}</span>
                       </div>
                     </div>
                   ))}

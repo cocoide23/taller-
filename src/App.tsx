@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard } from 'lucide-react';
+import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard, ShieldCheck } from 'lucide-react';
 import { processMechanicInput, MechanicReport } from './services/geminiService';
 import Dashboard from './components/Dashboard';
 import Presupuestos from './components/Presupuestos';
@@ -8,9 +8,10 @@ import Repuestos from './components/Repuestos';
 import DevOps from './components/DevOps';
 import Finanzas from './components/Finanzas';
 import SecurityRules from './components/SecurityRules';
+import QAReport from './components/QAReport';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'ai' | 'devops' | 'finanzas' | 'security'>('security');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'ai' | 'devops' | 'finanzas' | 'security' | 'qa'>('qa');
   
   // AI State
   const [mechanicInput, setMechanicInput] = useState("Le cambié las pastillas de freno al Ford Focus patente ABC 123, me llevó 2 horas y usé repuestos marca Bosch");
@@ -97,6 +98,18 @@ export default function App() {
 
           <div className="md:mt-8 pt-4 md:border-t border-slate-800 space-y-1">
             <button
+              onClick={() => setActiveTab('qa')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                activeTab === 'qa' 
+                  ? 'bg-emerald-500 text-white shadow-md' 
+                  : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
+              }`}
+            >
+              <ShieldCheck className="w-5 h-5" />
+              Auditoría QA
+            </button>
+
+            <button
               onClick={() => setActiveTab('finanzas')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
                 activeTab === 'finanzas' 
@@ -157,6 +170,7 @@ export default function App() {
           {activeTab === 'devops' && <DevOps />}
           {activeTab === 'finanzas' && <Finanzas />}
           {activeTab === 'security' && <SecurityRules />}
+          {activeTab === 'qa' && <QAReport />}
           
           {activeTab === 'ai' && (
             <div className="p-6 max-w-4xl mx-auto">
