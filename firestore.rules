@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función auxiliar para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Colección Vehículos
+    match /vehiculos/{patente} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false; // La información nunca se borra
+      
+      // Subcolección Historial Técnico
+      match /historial_tecnico/{historialId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated();
+        allow delete: if false; // La información nunca se borra
+      }
+    }
+
+    // Colección Órdenes
+    match /ordenes/{ordenId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      
+      // Regla principal: No permitir edición si el estado actual es 'Cerrado'
+      allow update: if isAuthenticated() 
+                    && resource.data.estado != 'Cerrado';
+                    
+      allow delete: if false; // La información nunca se borra
+    }
+  }
+}

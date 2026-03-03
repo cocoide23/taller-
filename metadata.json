@@ -1,0 +1,5 @@
+{
+  "name": "Firebase Auto Workshop Architecture",
+  "description": "Firestore database architecture, security rules, and indexes for a mechanic workshop management system.",
+  "requestFramePermissions": []
+}
