@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Nota: Para usar PostgreSQL en Railway, cambia provider a "postgresql"
+// y actualiza la DATABASE_URL en tu archivo .env
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          String   @default("MECHANIC") // "ADMIN" o "MECHANIC"
+  createdAt     DateTime @default(now())
+  
+  // Relación: Un mecánico puede tener muchos trabajos asignados
+  assignedJobs  Job[]    @relation("MechanicJobs")
+}
+
+model Vehicle {
+  id             String   @id @default(uuid())
+  patente        String   @unique
+  modelo         String
+  cliente_nombre String
+  createdAt      DateTime @default(now())
+
+  // Relación: Un vehículo puede tener muchos trabajos
+  jobs           Job[]
+}
+
+model Job {
+  id                   String   @id @default(uuid())
+  descripcion          String
+  estado               String   @default("PENDING") // "PENDING", "IN_PROGRESS", "COMPLETED"
+  createdAt            DateTime @default(now())
+
+  // Relación con Vehículo
+  id_vehiculo          String
+  vehicle              Vehicle  @relation(fields: [id_vehiculo], references: [id], onDelete: Cascade)
+
+  // Relación con Mecánico (Opcional, puede estar sin asignar)
+  assigned_mechanic_id String?
+  mechanic             User?    @relation("MechanicJobs", fields: [assigned_mechanic_id], references: [id], onDelete: SetNull)
+}

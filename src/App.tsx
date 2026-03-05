@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard, ShieldCheck, Menu, X, Camera } from 'lucide-react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Database, Shield, List, Code2, ChevronRight, FileJson, Lock, Search, Bot, Send, AlertCircle, CheckCircle2, Clock, Wrench, LayoutDashboard, Calculator, Package, Server, CreditCard, ShieldCheck, Menu, X, Camera, LogOut } from 'lucide-react';
 import { processMechanicInput, MechanicReport } from './services/geminiService';
 import Dashboard from './components/Dashboard';
 import Presupuestos from './components/Presupuestos';
@@ -11,10 +12,16 @@ import Finanzas from './components/Finanzas';
 import SecurityRules from './components/SecurityRules';
 import QAReport from './components/QAReport';
 import Evidencias from './components/Evidencias';
+import Login from './components/Login';
+import PrivateRoute from './components/PrivateRoute';
+import JobsDashboard from './components/JobsDashboard';
+import { useAuth } from './context/AuthContext';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'evidencias' | 'ai' | 'devops' | 'finanzas' | 'security' | 'qa'>('qa');
+function MainLayout() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'jobs' | 'presupuestos' | 'trazabilidad' | 'repuestos' | 'evidencias' | 'ai' | 'devops' | 'finanzas' | 'security' | 'qa'>('jobs');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   // AI State
   const [mechanicInput, setMechanicInput] = useState("Le cambié las pastillas de freno al Ford Focus patente ABC 123, me llevó 2 horas y usé repuestos marca Bosch");
@@ -42,6 +49,11 @@ export default function App() {
   const handleTabChange = (tab: any) => {
     setActiveTab(tab);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -77,145 +89,183 @@ export default function App() {
           <h1 className="text-xl font-bold text-slate-100 tracking-tight">Taller Manager</h1>
         </div>
 
-        <nav className="flex flex-col gap-1 pb-24 md:pb-0">
-          <button
-            onClick={() => handleTabChange('dashboard')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'dashboard' 
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
-                : 'hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </button>
+        <nav className="flex flex-col gap-1 pb-24 md:pb-0 flex-1">
+          {user?.role === 'ADMIN' && (
+            <button
+              onClick={() => handleTabChange('dashboard')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === 'dashboard' 
+                  ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              Dashboard
+            </button>
+          )}
           
           <button
-            onClick={() => handleTabChange('presupuestos')}
+            onClick={() => handleTabChange('jobs')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'presupuestos' 
+              activeTab === 'jobs' 
                 ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Calculator className="w-5 h-5" />
-            Presupuestos
+            <Wrench className="w-5 h-5" />
+            Trabajos
           </button>
 
-          <button
-            onClick={() => handleTabChange('repuestos')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'repuestos' 
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
-                : 'hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Package className="w-5 h-5" />
-            Repuestos
-          </button>
+          {user?.role === 'ADMIN' && (
+            <>
+              <button
+                onClick={() => handleTabChange('presupuestos')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'presupuestos' 
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
+                    : 'hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Calculator className="w-5 h-5" />
+                Presupuestos
+              </button>
 
-          <button
-            onClick={() => handleTabChange('evidencias')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'evidencias' 
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
-                : 'hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Camera className="w-5 h-5" />
-            Evidencias
-          </button>
+              <button
+                onClick={() => handleTabChange('repuestos')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'repuestos' 
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
+                    : 'hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Package className="w-5 h-5" />
+                Repuestos
+              </button>
 
-          <button
-            onClick={() => handleTabChange('trazabilidad')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'trazabilidad' 
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
-                : 'hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Search className="w-5 h-5" />
-            Trazabilidad
-          </button>
+              <button
+                onClick={() => handleTabChange('evidencias')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'evidencias' 
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
+                    : 'hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Camera className="w-5 h-5" />
+                Evidencias
+              </button>
 
-          <div className="mt-8 pt-4 border-t border-slate-800 space-y-1">
-            <button
-              onClick={() => handleTabChange('qa')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
-                activeTab === 'qa' 
-                  ? 'bg-emerald-500 text-white shadow-md' 
-                  : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
-              }`}
+              <button
+                onClick={() => handleTabChange('trazabilidad')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'trazabilidad' 
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
+                    : 'hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Search className="w-5 h-5" />
+                Trazabilidad
+              </button>
+            </>
+          )}
+
+          {user?.role === 'ADMIN' && (
+            <div className="mt-8 pt-4 border-t border-slate-800 space-y-1">
+              <button
+                onClick={() => handleTabChange('qa')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                  activeTab === 'qa' 
+                    ? 'bg-emerald-500 text-white shadow-md' 
+                    : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+                Auditoría QA
+              </button>
+
+              <button
+                onClick={() => handleTabChange('finanzas')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                  activeTab === 'finanzas' 
+                    ? 'bg-amber-500 text-white shadow-md' 
+                    : 'text-amber-400 hover:bg-slate-800 hover:text-amber-300'
+                }`}
+              >
+                <CreditCard className="w-5 h-5" />
+                Webhook Finanzas
+              </button>
+
+              <button
+                onClick={() => handleTabChange('security')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                  activeTab === 'security' 
+                    ? 'bg-rose-500 text-white shadow-md' 
+                    : 'text-rose-400 hover:bg-slate-800 hover:text-rose-300'
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                Security Rules
+              </button>
+
+              <button
+                onClick={() => handleTabChange('ai')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                  activeTab === 'ai' 
+                    ? 'bg-emerald-500 text-white shadow-md' 
+                    : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
+                }`}
+              >
+                <Bot className="w-5 h-5" />
+                Asistente IA
+              </button>
+              
+              <button
+                onClick={() => handleTabChange('devops')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
+                  activeTab === 'devops' 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-blue-400 hover:bg-slate-800 hover:text-blue-300'
+                }`}
+              >
+                <Server className="w-5 h-5" />
+                Deploy & Firebase
+              </button>
+            </div>
+          )}
+        </nav>
+
+        {/* User Profile / Logout */}
+        <div className="mt-auto pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-between px-4 py-3 bg-slate-900/50 rounded-xl border border-slate-800">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-slate-200">{user?.name}</span>
+              <span className="text-xs text-slate-500">{user?.role}</span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+              title="Cerrar Sesión"
             >
-              <ShieldCheck className="w-5 h-5" />
-              Auditoría QA
-            </button>
-
-            <button
-              onClick={() => handleTabChange('finanzas')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
-                activeTab === 'finanzas' 
-                  ? 'bg-amber-500 text-white shadow-md' 
-                  : 'text-amber-400 hover:bg-slate-800 hover:text-amber-300'
-              }`}
-            >
-              <CreditCard className="w-5 h-5" />
-              Webhook Finanzas
-            </button>
-
-            <button
-              onClick={() => handleTabChange('security')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
-                activeTab === 'security' 
-                  ? 'bg-rose-500 text-white shadow-md' 
-                  : 'text-rose-400 hover:bg-slate-800 hover:text-rose-300'
-              }`}
-            >
-              <Shield className="w-5 h-5" />
-              Security Rules
-            </button>
-
-            <button
-              onClick={() => handleTabChange('ai')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
-                activeTab === 'ai' 
-                  ? 'bg-emerald-500 text-white shadow-md' 
-                  : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
-              }`}
-            >
-              <Bot className="w-5 h-5" />
-              Asistente IA
-            </button>
-            
-            <button
-              onClick={() => handleTabChange('devops')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap w-full ${
-                activeTab === 'devops' 
-                  ? 'bg-blue-600 text-white shadow-md' 
-                  : 'text-blue-400 hover:bg-slate-800 hover:text-blue-300'
-              }`}
-            >
-              <Server className="w-5 h-5" />
-              Deploy & Firebase
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
-        </nav>
+        </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto h-[calc(100dvh-72px)] md:h-[100dvh] pb-safe bg-slate-900">
         <div className="max-w-6xl mx-auto animate-in fade-in">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'presupuestos' && <Presupuestos />}
-          {activeTab === 'trazabilidad' && <Trazabilidad />}
-          {activeTab === 'repuestos' && <Repuestos aiResult={aiResult} />}
-          {activeTab === 'evidencias' && <Evidencias />}
-          {activeTab === 'devops' && <FirebaseSetup />}
-          {activeTab === 'finanzas' && <Finanzas />}
-          {activeTab === 'security' && <SecurityRules />}
-          {activeTab === 'qa' && <QAReport />}
+          {activeTab === 'dashboard' && user?.role === 'ADMIN' && <Dashboard />}
+          {activeTab === 'jobs' && <JobsDashboard />}
+          {activeTab === 'presupuestos' && user?.role === 'ADMIN' && <Presupuestos />}
+          {activeTab === 'trazabilidad' && user?.role === 'ADMIN' && <Trazabilidad />}
+          {activeTab === 'repuestos' && user?.role === 'ADMIN' && <Repuestos aiResult={aiResult} />}
+          {activeTab === 'evidencias' && user?.role === 'ADMIN' && <Evidencias />}
+          {activeTab === 'devops' && user?.role === 'ADMIN' && <FirebaseSetup />}
+          {activeTab === 'finanzas' && user?.role === 'ADMIN' && <Finanzas />}
+          {activeTab === 'security' && user?.role === 'ADMIN' && <SecurityRules />}
+          {activeTab === 'qa' && user?.role === 'ADMIN' && <QAReport />}
           
-          {activeTab === 'ai' && (
+          {activeTab === 'ai' && user?.role === 'ADMIN' && (
             <div className="p-6 max-w-4xl mx-auto">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
@@ -331,5 +381,27 @@ export default function App() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      
+      {/* Rutas protegidas para ADMIN */}
+      <Route element={<PrivateRoute allowedRoles={['ADMIN']} />}>
+        <Route path="/admin" element={<MainLayout />} />
+      </Route>
+
+      {/* Rutas protegidas para MECHANIC */}
+      <Route element={<PrivateRoute allowedRoles={['MECHANIC']} />}>
+        <Route path="/mechanic" element={<MainLayout />} />
+      </Route>
+
+      {/* Redirección por defecto */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
