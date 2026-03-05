@@ -1,4 +1,7 @@
-import { GoogleGenAI, Type } from "@google/genai";
+/**
+ * geminiDiagnostico.ts — client-side wrapper
+ * Calls the backend /api/ai/diagnostico endpoint (Gemini key stays server-side).
+ */
 
 export interface DiagnosisResult {
   diagnosticoPresuntivo: string;
@@ -6,41 +9,20 @@ export interface DiagnosisResult {
 }
 
 export const generateDiagnosis = async (sintoma: string, modelo: string): Promise<DiagnosisResult> => {
-  // Inicializamos Gemini usando la variable de entorno inyectada por el sistema
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  
-  const prompt = `Actúa como un mecánico experto y jefe de taller. 
-  El cliente reporta el siguiente síntoma en su vehículo (${modelo}): "${sintoma}".
-  
-  Tu tarea es generar:
-  1. Un diagnóstico presuntivo redactado de forma profesional, empática y clara para el cliente (un párrafo bien redactado, no una lista de datos técnicos).
-  2. Una alerta de mantenimiento preventivo recomendada para este tipo de vehículo o síntoma (ej: "Sugerimos revisar también...").`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          diagnosticoPresuntivo: { 
-            type: Type.STRING, 
-            description: "Diagnóstico técnico detallado del problema." 
-          },
-          alertaMantenimiento: { 
-            type: Type.STRING, 
-            description: "Alerta de mantenimiento preventivo a recomendar al cliente." 
-          }
-        },
-        required: ["diagnosticoPresuntivo", "alertaMantenimiento"]
-      }
-    }
+  const res = await fetch('/api/ai/diagnostico', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sintoma, modelo }),
   });
 
-  if (!response.text) {
-    throw new Error("La IA no devolvió una respuesta válida.");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    // Throw a structured error so the UI can react to `retryAfter` when provided
+    const err: any = new Error(body.error || `HTTP ${res.status}`);
+    if (body.retryAfter) err.retryAfter = body.retryAfter;
+    throw err;
   }
 
-  return JSON.parse(response.text) as DiagnosisResult;
+  return res.json() as Promise<DiagnosisResult>;
 };
+

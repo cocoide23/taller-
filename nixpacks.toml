@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install --legacy-peer-deps"]
+
+[phases.build]
+cmds = ["npm run build:all"]
+
+[start]
+cmd = "node dist-server/index.js"
