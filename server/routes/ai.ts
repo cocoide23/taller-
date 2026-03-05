@@ -3,6 +3,10 @@ import { GoogleGenAI, Type } from '@google/genai';
 
 const router = Router();
 
+// Simple in-memory cooldown map to avoid spamming Gemini when quota is low.
+// Keyed by requester IP. Value is timestamp (ms) until which requests are blocked.
+const cooldowns = new Map<string, number>();
+
 function getAI() {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 }
@@ -22,9 +26,32 @@ function handleGeminiError(err: any, res: Response) {
   }
 
   if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
-    return res.status(429).json({
+    // Try to extract retry info (seconds) from error.details
+    let retrySeconds: number | undefined;
+    try {
+      const parsed = JSON.parse(raw);
+      const details = parsed?.error?.details || [];
+      for (const d of details) {
+        if (d?.['@type'] === 'type.googleapis.com/google.rpc.RetryInfo') {
+          const delay = d?.retryDelay;
+          if (typeof delay === 'string') {
+            // format like "42.283246563s"
+            const m = delay.match(/([0-9]+)(?:\.([0-9]+))?s/);
+            if (m) retrySeconds = Math.ceil(parseFloat(m[1] + (m[2] ? '.' + m[2] : '')));
+          } else if (delay && typeof delay.seconds !== 'undefined') {
+            retrySeconds = Math.ceil(Number(delay.seconds));
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    const payload: any = {
       error: 'Cuota de la IA agotada. El límite gratuito diario fue alcanzado. Intentá de nuevo más tarde o habilitá facturación en Google AI Studio.',
-    });
+    };
+    if (retrySeconds) payload.retryAfter = retrySeconds;
+    return res.status(429).json(payload);
   }
   if (code === 400 || status === 'INVALID_ARGUMENT') {
     return res.status(400).json({
@@ -85,6 +112,13 @@ router.post('/parse-input', async (req: Request, res: Response) => {
 router.post('/diagnostico', async (req: Request, res: Response) => {
   const { sintoma, modelo } = req.body;
   if (!sintoma || !modelo) return res.status(400).json({ error: 'sintoma and modelo are required' });
+  // Simple per-requester cooldown to avoid rapid retries when quota is low
+  const key = (req.headers['x-forwarded-for'] as string) || req.ip || 'global';
+  const blockedUntil = cooldowns.get(key) || 0;
+  if (blockedUntil > Date.now()) {
+    const retryAfter = Math.ceil((blockedUntil - Date.now()) / 1000);
+    return res.status(429).json({ error: 'Rate limitado localmente. Reintentá más tarde.', retryAfter });
+  }
 
   try {
     const ai = getAI();
@@ -111,6 +145,8 @@ Tu tarea es generar:
       },
     });
 
+    // Set a brief cooldown for this requester to avoid rapid repeated calls
+    cooldowns.set(key, Date.now() + 15 * 1000);
     res.json(JSON.parse(response.text || '{}'));
   } catch (err: any) {
     console.error('Gemini diagnostico error:', err);

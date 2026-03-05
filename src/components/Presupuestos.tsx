@@ -19,6 +19,7 @@ export default function Presupuestos() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retrySeconds, setRetrySeconds] = useState<number>(0);
 
   // Estado local para manejar el input de costo con decimales en tiempo real
   const [costoManoObraInput, setCostoManoObraInput] = useState<string>('0');
@@ -79,11 +80,32 @@ export default function Presupuestos() {
       setDiagnosticoInput(newText);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Error al generar diagnóstico con IA.");
+      // If server provided a retryAfter, show countdown and friendly message
+      if (err?.retryAfter) {
+        setRetrySeconds(Number(err.retryAfter));
+        setError((err.message || 'Cuota de la IA agotada. Intentá más tarde.') + ` Reintentá en ${err.retryAfter}s.`);
+      } else {
+        setError(err.message || "Error al generar diagnóstico con IA.");
+      }
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  // Countdown effect for retrySeconds
+  useEffect(() => {
+    if (!retrySeconds) return;
+    const iv = setInterval(() => {
+      setRetrySeconds((s) => {
+        if (s <= 1) {
+          clearInterval(iv);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [retrySeconds]);
 
   const handleSaveDraft = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -257,15 +279,20 @@ export default function Presupuestos() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-slate-700">Diagnóstico Técnico</label>
                   {(!selectedOrder.presupuestoAprobado || isCreatingNewVersion) && (
-                    <button
-                      type="button"
-                      onClick={handleMagicWand}
-                      disabled={isAnalyzing || isSaving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-                    >
-                      {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
-                      {isAnalyzing ? 'Analizando...' : 'Varita Mágica (IA)'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleMagicWand}
+                        disabled={isAnalyzing || isSaving || retrySeconds > 0}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                      >
+                        {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                        {isAnalyzing ? 'Analizando...' : 'Varita Mágica (IA)'}
+                      </button>
+                      {retrySeconds > 0 && (
+                        <span className="text-xs text-amber-600">Reintentar en {retrySeconds}s</span>
+                      )}
+                    </div>
                   )}
                 </div>
                 <textarea

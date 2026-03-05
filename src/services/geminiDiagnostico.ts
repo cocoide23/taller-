@@ -17,7 +17,10 @@ export const generateDiagnosis = async (sintoma: string, modelo: string): Promis
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `HTTP ${res.status}`);
+    // Throw a structured error so the UI can react to `retryAfter` when provided
+    const err: any = new Error(body.error || `HTTP ${res.status}`);
+    if (body.retryAfter) err.retryAfter = body.retryAfter;
+    throw err;
   }
 
   return res.json() as Promise<DiagnosisResult>;
