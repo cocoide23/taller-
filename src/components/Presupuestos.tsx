@@ -173,20 +173,20 @@ export default function Presupuestos() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Calculator className="w-6 h-6 text-indigo-500" />
+        <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+          <Calculator className="w-6 h-6 text-violet-500" />
           Módulo de Presupuestos Pro
         </h2>
-        <p className="text-slate-500">Genera presupuestos precisos. Al aprobarse, los precios quedan congelados (Inmutabilidad).</p>
+        <p className="text-slate-400">Genera presupuestos precisos. Al aprobarse, los precios quedan congelados (Inmutabilidad).</p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-lg overflow-hidden transition-all">
-        <div className="p-6 border-b border-slate-100 bg-slate-50/80">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Seleccionar Orden Activa</label>
+      <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-lg overflow-hidden transition-all">
+        <div className="p-6 border-b border-slate-800 bg-slate-900/80">
+          <label className="block text-sm font-medium text-slate-300 mb-2">Seleccionar Orden Activa</label>
           <select 
             value={selectedOrderId}
             onChange={(e) => setSelectedOrderId(e.target.value)}
-            className="w-full p-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-shadow"
+            className="w-full p-3.5 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none shadow-sm transition-shadow"
           >
             <option value="">-- Seleccione un vehículo --</option>
             {orders.filter(o => o.estado !== 'Cerrado' && o.estado !== 'Anulado').map(o => (
@@ -198,35 +198,35 @@ export default function Presupuestos() {
         {selectedOrder && (
           <div className="p-6 md:p-8">
             {error && (
-              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-rose-800 animate-in fade-in">
-                <AlertCircle className="w-5 h-5 mt-0.5 text-rose-600 shrink-0" />
+              <div className="mb-6 p-4 bg-rose-900/40 border border-rose-800 rounded-xl flex items-start gap-3 text-rose-400 animate-in fade-in">
+                <AlertCircle className="w-5 h-5 mt-0.5 text-rose-500 shrink-0" />
                 <div>
                   <h4 className="font-semibold">Error en la Transacción</h4>
-                  <p className="text-sm text-rose-600/80">{error}</p>
+                  <p className="text-sm text-rose-400/80">{error}</p>
                 </div>
               </div>
             )}
 
             {selectedOrder.presupuestoAprobado && !isCreatingNewVersion && (
               <div className="mb-8 space-y-4">
-                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 text-emerald-800 animate-in fade-in">
-                  <Lock className="w-5 h-5 mt-0.5 text-emerald-600 shrink-0" />
+                <div className="p-5 bg-emerald-900/20 border border-emerald-800/50 rounded-2xl flex items-start gap-3 text-emerald-400 animate-in fade-in">
+                  <Lock className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-emerald-900">Presupuesto Aprobado (v{selectedOrder.versionPresupuesto || 1})</h4>
-                    <p className="text-sm text-emerald-700 mt-1">Los campos de precio y diagnóstico están bloqueados. Puedes generar una nueva versión si necesitas hacer cambios.</p>
+                    <h4 className="font-semibold text-emerald-400">Presupuesto Aprobado (v{selectedOrder.versionPresupuesto || 1})</h4>
+                    <p className="text-sm text-emerald-500/80 mt-1">Los campos de precio y diagnóstico están bloqueados. Puedes generar una nueva versión si necesitas hacer cambios.</p>
                   </div>
                 </div>
                 
                 {selectedOrder.auditHistory && selectedOrder.auditHistory.length > 0 && (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2 text-sm text-slate-600 animate-in fade-in">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col gap-2 text-sm text-slate-400 animate-in fade-in">
                     <div className="flex items-center gap-2 mb-1">
-                      <FileText className="w-4 h-4 text-slate-400" />
-                      <span className="font-semibold">Historial de Auditoría:</span>
+                      <FileText className="w-4 h-4 text-slate-500" />
+                      <span className="font-semibold text-slate-300">Historial de Auditoría:</span>
                     </div>
                     {selectedOrder.auditHistory.map((entry, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                      <div key={idx} className="flex items-center justify-between py-1 border-b border-slate-800 last:border-0">
                         <span>{entry.accion} por {entry.usuario}</span>
-                        <span className="font-mono text-xs text-slate-400">{new Date(entry.fecha).toLocaleString()}</span>
+                        <span className="font-mono text-xs text-slate-500">{new Date(entry.fecha).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -236,17 +236,17 @@ export default function Presupuestos() {
 
             <form onSubmit={handleSaveDraft} className="space-y-8">
               {isCreatingNewVersion && (
-                <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl animate-in fade-in mb-6">
-                  <h4 className="font-semibold text-amber-900 flex items-center gap-2 mb-3">
-                    <History className="w-5 h-5 text-amber-600" />
+                <div className="p-5 bg-amber-900/20 border border-amber-800/50 rounded-2xl animate-in fade-in mb-6">
+                  <h4 className="font-semibold text-amber-500 flex items-center gap-2 mb-3">
+                    <History className="w-5 h-5 text-amber-500" />
                     Generando Nueva Versión (v{(selectedOrder.versionPresupuesto || 1) + 1})
                   </h4>
-                  <label className="block text-sm font-medium text-amber-800 mb-2">Motivo del Cambio *</label>
+                  <label className="block text-sm font-medium text-amber-400 mb-2">Motivo del Cambio *</label>
                   <input
                     type="text"
                     value={motivoCambio}
                     onChange={(e) => setMotivoCambio(e.target.value)}
-                    className="w-full p-3 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
+                    className="w-full p-3 bg-slate-900 border border-amber-800/50 text-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
                     placeholder="Ej: Se agregó repuesto faltante, ajuste de mano de obra..."
                     required={isCreatingNewVersion}
                   />
@@ -255,13 +255,13 @@ export default function Presupuestos() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-slate-700">Diagnóstico Técnico</label>
+                  <label className="block text-sm font-medium text-slate-300">Diagnóstico Técnico</label>
                   {(!selectedOrder.presupuestoAprobado || isCreatingNewVersion) && (
                     <button
                       type="button"
                       onClick={handleMagicWand}
                       disabled={isAnalyzing || isSaving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 border border-violet-500/20"
                     >
                       {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
                       {isAnalyzing ? 'Analizando...' : 'Varita Mágica (IA)'}
@@ -272,45 +272,45 @@ export default function Presupuestos() {
                   value={diagnosticoInput}
                   onChange={(e) => setDiagnosticoInput(e.target.value)}
                   disabled={(selectedOrder.presupuestoAprobado && !isCreatingNewVersion) || isSaving || isAnalyzing}
-                  className="w-full h-40 p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-60 disabled:bg-slate-100 resize-none shadow-inner transition-all text-slate-700"
+                  className="w-full h-40 p-4 bg-slate-900 border border-slate-700 rounded-2xl focus:ring-2 focus:ring-violet-500 outline-none disabled:opacity-60 disabled:bg-slate-950 resize-none shadow-inner transition-all text-slate-200"
                   placeholder="Detalle el problema encontrado y los trabajos a realizar..."
                   required
                 />
                 
                 {alertaPreventiva && (!selectedOrder.presupuestoAprobado || isCreatingNewVersion) && (
-                  <div className="mt-4 p-4 bg-amber-50/50 border border-amber-100 rounded-xl animate-in fade-in">
+                  <div className="mt-4 p-4 bg-amber-900/20 border border-amber-800/50 rounded-xl animate-in fade-in">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <div className="mt-0.5">
                         <input 
                           type="checkbox" 
                           checked={includePreventiveAlert}
                           onChange={(e) => setIncludePreventiveAlert(e.target.checked)}
-                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500"
+                          className="w-4 h-4 text-violet-600 rounded border-slate-700 focus:ring-violet-500 bg-slate-900"
                         />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-amber-500 flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4 text-amber-500" />
                           Mantenimiento Sugerido (IA)
                         </h4>
-                        <p className="text-sm text-amber-700 mt-1">{alertaPreventiva}</p>
-                        <p className="text-xs text-amber-600/70 mt-1 italic">Si marcas esta opción, se incluirá como nota en el mensaje de WhatsApp al cliente.</p>
+                        <p className="text-sm text-amber-400/90 mt-1">{alertaPreventiva}</p>
+                        <p className="text-xs text-amber-500/70 mt-1 italic">Si marcas esta opción, se incluirá como nota en el mensaje de WhatsApp al cliente.</p>
                       </div>
                     </label>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-2xl border border-slate-800">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Costo Mano de Obra</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Costo Mano de Obra</label>
                   <div className="relative">
                     <input
                       type="text"
                       value={formatARS(parseFloat(costoManoObraInput) || 0)}
                       onChange={handleCostoChange}
                       disabled={(selectedOrder.presupuestoAprobado && !isCreatingNewVersion) || isSaving}
-                      className="w-full p-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-60 disabled:bg-slate-100 shadow-sm transition-all text-slate-900 font-medium"
+                      className="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none disabled:opacity-60 disabled:bg-slate-900 shadow-sm transition-all text-slate-100 font-medium"
                       placeholder="$ 0,00"
                       required
                     />
@@ -318,10 +318,10 @@ export default function Presupuestos() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Costo Repuestos Cargados</label>
-                  <div className="w-full p-3.5 bg-slate-200/70 border border-slate-300 rounded-xl text-slate-600 font-mono font-medium shadow-inner cursor-not-allowed flex items-center justify-between">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Costo Repuestos Cargados</label>
+                  <div className="w-full p-3.5 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-400 font-mono font-medium shadow-inner cursor-not-allowed flex items-center justify-between">
                     <span>{formatARS(totalRepuestos)}</span>
-                    <Lock className="w-4 h-4 text-slate-400" />
+                    <Lock className="w-4 h-4 text-slate-500" />
                   </div>
                   <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
                     Solo lectura (proviene del módulo Repuestos)
@@ -329,10 +329,10 @@ export default function Presupuestos() {
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="text-center md:text-left">
-                  <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold mb-1">Total Presupuesto</p>
-                  <div className="text-4xl font-bold text-slate-900 tracking-tight">
+                  <p className="text-sm text-slate-400 uppercase tracking-wider font-semibold mb-1">Total Presupuesto</p>
+                  <div className="text-4xl font-bold text-slate-100 tracking-tight">
                     {formatARS(totalGeneral)}
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export default function Presupuestos() {
                         type="button"
                         onClick={handleStartNewVersion}
                         disabled={isSaving}
-                        className="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg w-full sm:w-auto disabled:opacity-70"
+                        className="px-6 py-3.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg w-full sm:w-auto disabled:opacity-70 active:scale-95"
                       >
                         <History className="w-5 h-5" />
                         Modificar Presupuesto
@@ -352,7 +352,7 @@ export default function Presupuestos() {
                       <button
                         type="button"
                         onClick={handleWhatsApp}
-                        className="px-6 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg w-full sm:w-auto"
+                        className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg w-full sm:w-auto active:scale-95"
                       >
                         <MessageCircle className="w-5 h-5" />
                         Enviar por WhatsApp
@@ -365,7 +365,7 @@ export default function Presupuestos() {
                           type="button"
                           onClick={handleCancelNewVersion}
                           disabled={isSaving}
-                          className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                          className="px-6 py-3.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto active:scale-95"
                         >
                           Cancelar
                         </button>
@@ -374,7 +374,7 @@ export default function Presupuestos() {
                         <button
                           type="submit"
                           disabled={isSaving}
-                          className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                          className="px-6 py-3.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50 w-full sm:w-auto active:scale-95"
                         >
                           Guardar Borrador
                         </button>
@@ -383,7 +383,7 @@ export default function Presupuestos() {
                         type="button"
                         onClick={handleApprove}
                         disabled={isSaving}
-                        className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto"
+                        className="px-6 py-3.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto active:scale-95"
                       >
                         {isSaving ? (
                           <>
