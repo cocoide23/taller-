@@ -7,6 +7,34 @@ function getAI() {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 }
 
+function handleGeminiError(err: any, res: Response) {
+  const raw: string = err?.message || '';
+  // Try to extract the structured error payload Gemini embeds in the message
+  let code: number | undefined;
+  let status: string | undefined;
+  try {
+    const parsed = JSON.parse(raw);
+    code   = parsed?.error?.code;
+    status = parsed?.error?.status;
+  } catch {
+    // message is not JSON — use HTTP status if available
+    code = err?.status;
+  }
+
+  if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
+    return res.status(429).json({
+      error: 'Cuota de la IA agotada. El límite gratuito diario fue alcanzado. Intentá de nuevo más tarde o habilitá facturación en Google AI Studio.',
+    });
+  }
+  if (code === 400 || status === 'INVALID_ARGUMENT') {
+    return res.status(400).json({
+      error: 'La clave de API de Gemini no es válida. Verificá la variable GEMINI_API_KEY en el servidor.',
+    });
+  }
+  // Generic fallback
+  return res.status(500).json({ error: 'Error al procesar la solicitud con la IA. Intentá de nuevo.' });
+}
+
 // ─────────────────────────────────────────────
 // POST /api/ai/parse-input
 // Parses informal mechanic text into structured data
@@ -46,7 +74,7 @@ router.post('/parse-input', async (req: Request, res: Response) => {
     res.json(JSON.parse(response.text || '{}'));
   } catch (err: any) {
     console.error('Gemini parse-input error:', err);
-    res.status(500).json({ error: err.message });
+    handleGeminiError(err, res);
   }
 });
 
@@ -86,7 +114,7 @@ Tu tarea es generar:
     res.json(JSON.parse(response.text || '{}'));
   } catch (err: any) {
     console.error('Gemini diagnostico error:', err);
-    res.status(500).json({ error: err.message });
+    handleGeminiError(err, res);
   }
 });
 

@@ -201,7 +201,7 @@ export default function Presupuestos() {
               <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-rose-800 animate-in fade-in">
                 <AlertCircle className="w-5 h-5 mt-0.5 text-rose-600 shrink-0" />
                 <div>
-                  <h4 className="font-semibold">Error en la Transacción</h4>
+                  <h4 className="font-semibold">Error</h4>
                   <p className="text-sm text-rose-600/80">{error}</p>
                 </div>
               </div>
