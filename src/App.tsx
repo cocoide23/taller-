@@ -45,18 +45,18 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 font-sans flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-900 text-slate-100 font-sans flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between z-20 sticky top-0">
+      <div className="md:hidden bg-slate-950 text-white p-4 flex items-center justify-between z-20 sticky top-0 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-500/20">
             <Wrench className="w-5 h-5" />
           </div>
-          <h1 className="text-lg font-bold tracking-tight">Taller Manager</h1>
+          <h1 className="text-lg font-bold tracking-tight text-slate-100">Taller Manager</h1>
         </div>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 bg-slate-800 rounded-lg text-slate-300 hover:text-white"
+          className="p-2 bg-slate-800 rounded-lg text-slate-300 hover:text-white transition-colors"
         >
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -64,17 +64,17 @@ export default function App() {
 
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed md:static inset-0 z-10 bg-slate-900 text-slate-300 
+        fixed md:static inset-0 z-10 bg-slate-950 text-slate-300 
         w-full md:w-64 flex-shrink-0 flex flex-col gap-2
-        transition-transform duration-300 ease-in-out
+        transition-transform duration-300 ease-in-out border-r border-slate-800
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         pt-20 md:pt-4 p-4 md:min-h-[100dvh] overflow-y-auto
       `}>
         <div className="hidden md:flex items-center gap-3 mb-8 px-2 pt-4">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-500/20">
             <Wrench className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Taller Manager</h1>
+          <h1 className="text-xl font-bold text-slate-100 tracking-tight">Taller Manager</h1>
         </div>
 
         <nav className="flex flex-col gap-1 pb-24 md:pb-0">
@@ -82,7 +82,7 @@ export default function App() {
             onClick={() => handleTabChange('dashboard')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'dashboard' 
-                ? 'bg-indigo-500 text-white shadow-md' 
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -94,7 +94,7 @@ export default function App() {
             onClick={() => handleTabChange('presupuestos')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'presupuestos' 
-                ? 'bg-indigo-500 text-white shadow-md' 
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -106,7 +106,7 @@ export default function App() {
             onClick={() => handleTabChange('repuestos')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'repuestos' 
-                ? 'bg-indigo-500 text-white shadow-md' 
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -118,7 +118,7 @@ export default function App() {
             onClick={() => handleTabChange('evidencias')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'evidencias' 
-                ? 'bg-indigo-500 text-white shadow-md' 
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -130,7 +130,7 @@ export default function App() {
             onClick={() => handleTabChange('trazabilidad')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'trazabilidad' 
-                ? 'bg-indigo-500 text-white shadow-md' 
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20' 
                 : 'hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -203,8 +203,8 @@ export default function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-[calc(100dvh-72px)] md:h-[100dvh] pb-safe">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 overflow-y-auto h-[calc(100dvh-72px)] md:h-[100dvh] pb-safe bg-slate-900">
+        <div className="max-w-6xl mx-auto animate-in fade-in">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'presupuestos' && <Presupuestos />}
           {activeTab === 'trazabilidad' && <Trazabilidad />}
@@ -218,11 +218,11 @@ export default function App() {
           {activeTab === 'ai' && (
             <div className="p-6 max-w-4xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
                   <Bot className="w-6 h-6 text-emerald-500" />
                   Asistente IA (Gemini)
                 </h2>
-                <p className="text-slate-500">
+                <p className="text-slate-400">
                   Procesa reportes informales de mecánicos y extrae datos estructurados.
                 </p>
               </div>
@@ -230,13 +230,13 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Input Section */}
                 <div className="space-y-4">
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-slate-300">
                     Mensaje del Mecánico (Input)
                   </label>
                   <textarea
                     value={mechanicInput}
                     onChange={(e) => setMechanicInput(e.target.value)}
-                    className="w-full h-32 p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none text-slate-700 shadow-sm"
+                    className="w-full h-32 p-4 bg-slate-800 border border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none text-slate-200 shadow-sm outline-none"
                     placeholder="Ej: Le cambié el aceite al auto..."
                   />
                   
@@ -244,7 +244,7 @@ export default function App() {
                     <button
                       onClick={handleProcessInput}
                       disabled={isProcessing || !mechanicInput.trim()}
-                      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95"
                     >
                       {isProcessing ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -256,7 +256,7 @@ export default function App() {
                     
                     <button
                       onClick={() => setMechanicInput("Revisé los frenos pero me olvidé de anotar a qué auto fue, me llevó 1 hora y media.")}
-                      className="px-4 py-3 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm"
+                      className="px-4 py-3 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-xl transition-all shadow-sm active:scale-95"
                     >
                       Probar sin patente
                     </button>
@@ -264,7 +264,7 @@ export default function App() {
                 </div>
 
                 {/* Output Section */}
-                <div className="bg-slate-900 rounded-xl p-6 flex flex-col h-full min-h-[300px] shadow-sm">
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col h-full min-h-[300px] shadow-sm">
                   <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     Datos Extraídos (Estructurados)
